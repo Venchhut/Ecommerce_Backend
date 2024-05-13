@@ -1,13 +1,13 @@
-import Address from "./Address";
-import Cart from "./Cart";
-import Category from "./Category";
-import Feedback from "./Feedback";
-import Order from "./Order";
-import Payment from "./Payment";
-import Product from "./Product";
-import TrackingDetail from "./TrackingDetail";
-import User from "./User";
-import Wishlist from "./Wishlist";
+import Address from "./Address.js";
+import Cart from "./Cart.js";
+import Category from "./Category.js";
+import Feedback from "./Feedback.js";
+import Order from "./Order.js";
+import Payment from "./Payment.js";
+import Product from "./Product.js";
+import TrackingDetail from "./TrackingDetail.js";
+import User from "./User.js";
+import Wishlist from "./Wishlist.js";
 
 const Relationship = () => {
   User.hasMany(Address);
@@ -34,6 +34,16 @@ const Relationship = () => {
   Product.hasMany(Feedback);
   Feedback.belongsTo(Product);
 
+  // Cart.hasMany(Product);
+  // Product.belongsTo(Cart);
+  Product.hasMany(Cart);
+  Cart.belongsTo(Product);
+
+  // Cart.hasOne(User);
+  // User.belongsTo(Cart);
+  User.hasMany(Cart);
+  Cart.belongsTo(User);
+
   Category.hasMany(Product);
   Product.belongsTo(Category);
 
@@ -42,11 +52,5 @@ const Relationship = () => {
 
   User.hasMany(Wishlist);
   Wishlist.belongsTo(User);
-
-  Cart.hasMany(Product);
-  Product.belongsTo(Cart);
-
-  Cart.hasOne(User);
-  User.belongsTo(Cart);
 };
 export default Relationship;

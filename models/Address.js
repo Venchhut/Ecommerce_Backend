@@ -1,5 +1,5 @@
 import DataTypes from "sequelize";
-import sequelize from "./connectDB";
+import sequelize from "./connectDB.js";
 
 const Address = sequelize.define("Address", {
   // Define attributes

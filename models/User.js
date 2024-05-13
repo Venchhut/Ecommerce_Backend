@@ -22,11 +22,11 @@ const User = sequelize.define("User", {
   },
   phoneNumber: {
     type: DataTypes.STRING,
-    allowNull: false,
   },
   address: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
+    defaultValue: null,
   },
 });
 
