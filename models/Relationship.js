@@ -3,6 +3,7 @@ import Cart from "./Cart.js";
 import Category from "./Category.js";
 import Feedback from "./Feedback.js";
 import Order from "./Order.js";
+import OrderItem from "./OrderItem.js";
 import Payment from "./Payment.js";
 import Product from "./Product.js";
 import TrackingDetail from "./TrackingDetail.js";
@@ -22,9 +23,13 @@ const Relationship = () => {
   User.hasMany(Order);
   Order.belongsTo(User);
 
-  Order.hasMany(Product);
-  Product.belongsTo(Order);
+  // Product.hasMany(Order);
+  // Order.belongsTo(Product);
+  Order.hasMany(OrderItem);
+  OrderItem.belongsTo(Order);
 
+  Product.hasMany(OrderItem);
+  OrderItem.belongsTo(Product);
   Order.hasMany(Payment);
   Payment.belongsTo(Order);
 

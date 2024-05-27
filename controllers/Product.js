@@ -18,7 +18,7 @@ const getAllProduct = async (req, res) => {
 // ! Create a new product
 const createProduct = async (req, res) => {
   try {
-    const { title, Desc, image, price, stock, CategoryId } = req.body;
+    const { title, Desc, image, price, quantity, CategoryId } = req.body;
     console.log(req.body);
     // check if category exist
     const category = await Category.findByPk(CategoryId);
@@ -31,7 +31,7 @@ const createProduct = async (req, res) => {
       Desc,
       price,
       image,
-      stock,
+      quantity,
       CategoryId,
     });
     res.status(201).json({ message: "Product created successfully", product });
@@ -44,10 +44,10 @@ const createProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
   const { id } = req.params;
   try {
-    const { title, Desc, image, price, stock, CategoryId } = req.body;
+    const { title, Desc, image, price, quantity, CategoryId } = req.body;
     console.log(req.body);
     await Product.update(
-      { title, Desc, image, price, stock, CategoryId },
+      { title, Desc, image, price, quantity, CategoryId },
       { where: { id } }
     );
     res.status(200).json("Update successfully");
@@ -76,7 +76,7 @@ const productDetail = async (req, res) => {
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
-    if (product.stock === "0") {
+    if (product.quantity === "0") {
       return res
         .status(200)
         .json({ message: "This product is out of stock", product });

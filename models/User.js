@@ -28,8 +28,10 @@ const User = sequelize.define("User", {
     allowNull: true,
     defaultValue: null,
   },
+  role: {
+    type: DataTypes.ENUM("user", "admin"),
+    defaultValue: "user",
+    allowNull: false,
+  },
 });
-
-// `sequelize.define` also returns the model
-console.log(User === sequelize.models.User); // true
 export default User;

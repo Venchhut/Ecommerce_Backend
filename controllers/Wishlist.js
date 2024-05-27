@@ -1,23 +1,47 @@
 import Wishlist from "../models/Wishlist.js";
 import User from "../models/User.js";
 import Product from "../models/Product.js";
+import { Op } from "sequelize";
 // ! add to wishlist
-const addWishlist = async (UserId, ProductId) => {
+const addWishlist = async (req, res) => {
   try {
-    const wishlist = await Wishlist.create({ UserId, ProductId });
-    return wishlist;
+    const { productId } = req.body;
+    const userId = req.user.id;
+
+    // Check if the product is already in the user's wishlist
+    const existingWishlistItem = await Wishlist.findOne({
+      where: { UserId: userId, ProductId: productId },
+    });
+
+    if (existingWishlistItem) {
+      return res
+        .status(400)
+        .json({ error: "Product is already in the wishlist" });
+    }
+
+    // Add product to the wishlist
+    const wishlist = await Wishlist.create({
+      UserId: userId,
+      ProductId: productId,
+    });
+
+    return res.json(wishlist);
   } catch (error) {
-    console.error("Error adding to wishlist:", error);
-    throw error;
+    return res.status(500).json({ error: "Cannot add to wishlist" });
   }
 };
+
 // ! check a wishlist iterms
-const checkWishlist = async (UserId, ProductId) => {
+const checkWishlist = async (req, res) => {
   try {
+    const UserId = req.user.id;
+    const wishItemsId = req.params.wishItemsId;
     const wishlistItem = await Wishlist.findOne({
-      where: { UserId, ProductId },
+      where: {
+        [Op.and]: [{ UserId: UserId }, { id: wishItemsId }],
+      },
     });
-    return !!wishlistItem; // Return true if wishlist item exists, false otherwise
+    return res.json(wishlistItem); // Return true if wishlist item exists, false otherwise
   } catch (error) {
     console.error("Error checking wishlist:", error);
     throw error;
@@ -40,13 +64,14 @@ const deleteWishlist = async (UserId, ProductId) => {
   }
 };
 // ! get all wishlist iterms
-const getAllwishlist = async (UserId) => {
+const getAllwishlist = async (req, res) => {
   try {
+    const UserId = req.user.id;
     const wishItems = await Wishlist.findAll({
       where: { UserId },
       include: [Product],
     });
-    return wishItems;
+    return res.json(wishItems);
   } catch (error) {
     console.error("Error getting wishlist items:", error);
     throw error;
