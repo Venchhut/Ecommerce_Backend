@@ -1,4 +1,4 @@
-import DataTypes from "sequelize";
+import { DataTypes } from "sequelize";
 import sequelize from "./connectDB.js";
 
 const Category = sequelize.define("Category", {
@@ -6,9 +6,10 @@ const Category = sequelize.define("Category", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  icon: {
+  image: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
 });
+
 export default Category;

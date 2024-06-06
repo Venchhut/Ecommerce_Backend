@@ -82,3 +82,90 @@ export const createPaymentByStripe = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+// each order
+export const userOrders = async (req, res) => {
+  try {
+    // Get user ID from the request (assuming user authentication middleware)
+    const userId = req.user.id;
+
+    // Fetch all orders for the authenticated user
+    const orders = await Order.findAll({
+      where: { UserId: userId },
+      include: [
+        {
+          model: OrderItem,
+          include: [Product],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    // Check if orders exist
+    if (!orders || orders.length === 0) {
+      return res.status(404).json({ message: "No orders found" });
+    }
+
+    // Send orders in response
+    res.json(orders);
+  } catch (error) {
+    console.error("Error fetching user orders:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Fetch order details by order ID
+export const getOrderDetail = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    // Validate the orderId parameter
+    if (!orderId) {
+      return res.status(400).json({ error: "Order ID is required" });
+    }
+
+    // Fetch the order with associated order items and products
+    const order = await Order.findOne({
+      where: { id: orderId },
+      include: [
+        {
+          model: OrderItem,
+          include: [Product],
+        },
+      ],
+    });
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.json(order);
+  } catch (error) {
+    console.error("Error fetching order details:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Fetch all orders for admin users
+export const getAllorder = async (req, res) => {
+  try {
+    const orders = await Order.findAll({
+      include: [
+        {
+          model: OrderItem,
+          include: [Product],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    if (!orders || orders.length === 0) {
+      return res.status(404).json({ message: "No orders found" });
+    }
+
+    res.json(orders);
+  } catch (error) {
+    console.error("Error fetching all orders:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

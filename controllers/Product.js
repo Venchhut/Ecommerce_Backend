@@ -18,10 +18,15 @@ const getAllProduct = async (req, res) => {
 // ! Create a new product
 const createProduct = async (req, res) => {
   try {
-    const { title, Desc, image, price, quantity, CategoryId } = req.body;
+    const { title, Desc, price, quantity, CategoryId } = req.body;
     console.log(req.body);
     // check if category exist
     const category = await Category.findByPk(CategoryId);
+    let image = null;
+    if (req.file) {
+      const localhost = "http://localhost:8800/";
+      image = localhost + req.file.filename;
+    }
     if (!category) {
       return res.status(404).json({ error: "Category not found" });
     }
@@ -44,15 +49,37 @@ const createProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
   const { id } = req.params;
   try {
-    const { title, Desc, image, price, quantity, CategoryId } = req.body;
-    console.log(req.body);
-    await Product.update(
-      { title, Desc, image, price, quantity, CategoryId },
-      { where: { id } }
-    );
-    res.status(200).json("Update successfully");
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    const { title, Desc, price, quantity, CategoryId } = req.body;
+    let image = null;
+
+    if (req.file) {
+      const localhost = "http://localhost:8800/";
+      image = localhost + req.file.filename;
+    }
+
+    // Fetch the existing product
+    const product = await Product.findByPk(id);
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    // Update the product fields
+    product.title = title || product.title;
+    product.Desc = Desc || product.Desc;
+    product.price = price || product.price;
+    product.quantity = quantity || product.quantity;
+    product.CategoryId = CategoryId || product.CategoryId;
+    if (image) {
+      product.image = image;
+    }
+
+    // Save the updated product
+    await product.save();
+
+    res.status(200).json(product);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message, details: err.errors });
   }
 };
 
