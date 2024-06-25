@@ -7,6 +7,7 @@ import Category from "./routes/Category.js";
 import Wishlist from "./routes/Wishlist.js";
 import Cart from "./routes/Cart.js";
 import Order from "./routes/Order.js";
+import Tracking from "./routes/Tracking.js";
 import Relationship from "./models/Relationship.js";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
@@ -43,6 +44,7 @@ app.use("/api/category", Category);
 app.use("/api/wishlist", Wishlist);
 app.use("/api/cart", Cart);
 app.use("/api/order", Order);
+app.use("/api/tracking", Tracking);
 
 // Start server
 app.listen(Port, () => {

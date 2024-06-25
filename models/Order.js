@@ -18,6 +18,10 @@ const Order = sequelize.define("Order", {
     type: DataTypes.STRING,
     require: true,
   },
+  amount: {
+    type: DataTypes.STRING,
+    require: true,
+  },
 });
 
 export default Order;

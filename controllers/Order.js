@@ -4,6 +4,8 @@ import Cart from "../models/Cart.js"; // Import the Cart model
 import OrderItem from "../models/OrderItem.js";
 import Product from "../models/Product.js"; // Import the Product model
 import sequelize from "../models/connectDB.js"; // Ensure correct path to your sequelize instance
+import Address from "../models/Address.js";
+import User from "../models/User.js";
 
 const stripeInstance = stripe(
   "sk_test_51OWHOqFraYvbLw8OVdQ8ThcsXMZIPcvpAvfkiVzTWwf45K03Dcx03mrFdRsp303bvFx3YVJGZsUUccnUmMCUeA2k00twoe2qKL"
@@ -14,7 +16,6 @@ export const createPaymentByStripe = async (req, res) => {
   try {
     const { productCart, amount } = req.body;
     const currency = "usd"; // Adjust currency as needed
-
     // Validate amount and productCart
     if (
       !amount ||
@@ -41,15 +42,19 @@ export const createPaymentByStripe = async (req, res) => {
     if (!paymentIntent) {
       throw new Error("Failed to create payment intent");
     }
-
+    const addressId = await Address.findOne({ where: { UserId: req.user.id } });
+    if (!addressId) {
+      return res.status(400).json({ error: "You not yet insert Location" });
+    }
     // Create the order
     const order = await Order.create(
       {
-        email: req.user.email, // Assuming you have user authentication middleware and user email is available in req.user
-        payment: "Stripe", // Assuming payment method is Stripe
+        email: req.user.email,
+        payment: "Stripe",
         UserId: req.user.id,
-        address: req.user.address,
-        phone: req.user.phone, // Use address from request body
+        AddressId: addressId.id,
+        phone: req.user.phone,
+        amount: amount,
       },
       { transaction: t }
     );
@@ -60,11 +65,12 @@ export const createPaymentByStripe = async (req, res) => {
 
     // Create order items
     for (const product of productCart) {
+      console.log(product);
       await OrderItem.create(
         {
           OrderId: order.id,
           ProductId: product.Product.id,
-          quantity: product.Product.quantity,
+          quantity: product.quantity,
         },
         { transaction: t }
       );
@@ -167,5 +173,83 @@ export const getAllorder = async (req, res) => {
   } catch (error) {
     console.error("Error fetching all orders:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+//! All address
+export const allAddress = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    // Find all addresses for the given user
+    const addresses = await Address.findAll({
+      where: { UserId: userId },
+    });
+
+    if (addresses.length === 0) {
+      return res.status(404).json({ error: "No addresses found for the user" });
+    }
+
+    res.status(200).json(addresses);
+  } catch (error) {
+    console.error("Failed to retrieve addresses:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+//! create address
+export const CreateAddress = async (req, res) => {
+  const { street_address, city, country } = req.body;
+  const userId = req.user.id;
+
+  // Input validation
+  if (!street_address || !city || !country) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
+  try {
+    // Check if user exists
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Create new address
+    const newAddress = await Address.create({
+      street_address,
+      city,
+      country,
+      UserId: userId,
+    });
+
+    return res.status(201).json(newAddress);
+  } catch (error) {
+    console.error("Failed to create address:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+export const setAddress = async (req, res) => {
+  const currentUserId = req.user.id;
+  const addressId = req.params.id;
+  try {
+    // Find the address by addressId and currentUserId
+    const address = await Address.findOne({
+      where: { id: addressId },
+    });
+
+    if (address) {
+      // Update the UserId of the found address
+      address.UserId = currentUserId;
+      await address.save();
+      res.status(200).json({ message: "Address updated successfully" });
+    } else {
+      res.status(404).json({
+        error: "Address not found or does not belong to the current user",
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while updating the address" });
   }
 };

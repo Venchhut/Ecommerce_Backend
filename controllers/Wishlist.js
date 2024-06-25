@@ -48,21 +48,27 @@ const checkWishlist = async (req, res) => {
   }
 };
 // ! delete the iterms
-const deleteWishlist = async (UserId, ProductId) => {
+const deleteWishlist = async (req, res) => {
   try {
+    const UserId = req.user.id;
+    const { productId } = req.params;
+
     const wishlistItem = await Wishlist.findOne({
-      where: { UserId, ProductId },
+      where: { UserId, ProductId: productId },
     });
+
     if (wishlistItem) {
-      await Wishlist.destroy({ where: { UserId, ProductId } });
-      return true;
+      await Wishlist.destroy({ where: { UserId, ProductId: productId } });
+      return res.json({ message: "Wishlist item deleted successfully" });
     }
-    return false;
+
+    return res.status(404).json({ error: "Wishlist item not found" });
   } catch (error) {
     console.error("Error deleting wishlist item:", error);
-    throw error;
+    return res.status(500).json({ error: "Cannot delete wishlist item" });
   }
 };
+
 // ! get all wishlist iterms
 const getAllwishlist = async (req, res) => {
   try {

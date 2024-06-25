@@ -100,7 +100,7 @@ const getUserById = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, password, phoneNumber } = req.body;
+    const { name, email, password, phoneNumber, avatar } = req.body;
 
     // Validate input
     if (!id || (!name && !email && !password && !phoneNumber)) {
@@ -121,6 +121,7 @@ const updateUser = async (req, res) => {
       user.password = hashedPassword;
     }
     if (phoneNumber) user.phoneNumber = phoneNumber;
+    if (avatar) user.avatar = avatar;
 
     // Save the updated user
     await user.save();

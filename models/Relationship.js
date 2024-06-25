@@ -57,5 +57,8 @@ const Relationship = () => {
 
   User.hasMany(Wishlist);
   Wishlist.belongsTo(User);
+
+  Address.hasMany(Order);
+  Order.belongsTo(Address);
 };
 export default Relationship;
