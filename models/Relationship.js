@@ -17,8 +17,8 @@ const Relationship = () => {
   User.hasMany(Payment);
   Payment.belongsTo(User);
 
-  User.hasMany(Feedback);
-  Feedback.belongsTo(User);
+  // User.hasMany(Feedback);
+  // Feedback.belongsTo(User);
 
   User.hasMany(Order);
   Order.belongsTo(User);
@@ -36,8 +36,8 @@ const Relationship = () => {
   Order.hasMany(TrackingDetail);
   TrackingDetail.belongsTo(Order);
 
-  Product.hasMany(Feedback);
-  Feedback.belongsTo(Product);
+  // Product.hasMany(Feedback);
+  // Feedback.belongsTo(Product);
 
   // Cart.hasMany(Product);
   // Product.belongsTo(Cart);

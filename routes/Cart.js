@@ -11,6 +11,6 @@ const router = express.Router();
 
 router.post("/add/:productId", checkRole("user"), createCart);
 router.get("/find", checkRole("user"), allCart);
-router.delete("/:productId", checkRole("user"), deleteCart);
-router.patch("/:productId", checkRole("user"), updateCart);
+router.delete("/delete/:productId", checkRole("user"), deleteCart);
+router.patch("/update/:productId", checkRole("user"), updateCart);
 export default router;
