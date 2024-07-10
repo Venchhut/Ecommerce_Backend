@@ -5,6 +5,7 @@ import {
   getAllProduct,
   product,
   productDetail,
+  searchProducts,
   updateProduct,
 } from "../controllers/Product.js";
 import { checkRole } from "../middleware/authentication.js";
@@ -27,4 +28,5 @@ router.patch(
 router.delete("/:id", checkRole(["admin"]), deleteProduct);
 router.get("/:id", productDetail);
 router.get("/category/:id", product);
+
 export default router;

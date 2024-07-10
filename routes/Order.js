@@ -4,6 +4,7 @@ import { checkRole } from "../middleware/authentication.js";
 import {
   CreateAddress,
   allAddress,
+  createPaymentByCash,
   createPaymentByStripe,
   getAllorder,
   getOrderDetail,
@@ -14,6 +15,7 @@ import {
 const router = express.Router();
 
 router.post("/payment", checkRole("user"), createPaymentByStripe);
+router.post("/cash", checkRole("user"), createPaymentByCash);
 router.get("/", checkRole(["user"]), userOrders);
 router.get("/all", checkRole(["admin"]), getAllorder);
 router.get("/detail/:orderId", checkRole(["admin"]), getOrderDetail);

@@ -1,22 +1,99 @@
 import stripe from "stripe";
 import Order from "../models/Order.js";
-import Cart from "../models/Cart.js"; // Import the Cart model
+import Cart from "../models/Cart.js";
 import OrderItem from "../models/OrderItem.js";
-import Product from "../models/Product.js"; // Import the Product model
-import sequelize from "../models/connectDB.js"; // Ensure correct path to your sequelize instance
+import Product from "../models/Product.js";
+import sequelize from "../models/connectDB.js";
 import Address from "../models/Address.js";
 import User from "../models/User.js";
 
 const stripeInstance = stripe(
   "sk_test_51OWHOqFraYvbLw8OVdQ8ThcsXMZIPcvpAvfkiVzTWwf45K03Dcx03mrFdRsp303bvFx3YVJGZsUUccnUmMCUeA2k00twoe2qKL"
 ); // Use environment variable for secret key
+// ! payment by Card
+// export const createPaymentByStripe = async (req, res) => {
+//   const t = await sequelize.transaction(); // Use a transaction to ensure atomic operations
+//   try {
+//     const { productCart, amount } = req.body;
+//     const currency = "usd"; // Adjust currency as needed
+//     // Validate amount and productCart
+//     if (
+//       !amount ||
+//       !productCart ||
+//       !Array.isArray(productCart) ||
+//       productCart.length === 0
+//     ) {
+//       return res.status(400).json({ error: "Invalid input data" });
+//     }
 
+//     // Verify that all product IDs exist
+//     const productIds = productCart.map((product) => product.Product.id);
+//     const products = await Product.findAll({ where: { id: productIds } });
+//     if (products.length !== productCart.length) {
+//       return res.status(400).json({ error: "Some products do not exist" });
+//     }
+
+//     const paymentIntent = await stripeInstance.paymentIntents.create({
+//       amount,
+//       currency,
+//       automatic_payment_methods: { enabled: true },
+//     });
+
+//     if (!paymentIntent) {
+//       throw new Error("Failed to create payment intent");
+//     }
+//     const addressId = await Address.findOne({ where: { UserId: req.user.id } });
+//     if (!addressId) {
+//       return res.status(400).json({ error: "You not yet insert Location" });
+//     }
+//     // Create the order
+//     const order = await Order.create(
+//       {
+//         email: req.user.email,
+//         payment: "Stripe",
+//         UserId: req.user.id,
+//         AddressId: addressId.id,
+//         phone: req.user.phone,
+//         amount: amount,
+//       },
+//       { transaction: t }
+//     );
+
+//     if (!order) {
+//       throw new Error("Failed to create order");
+//     }
+
+//     // Create order items
+//     for (const product of productCart) {
+//       console.log(product);
+//       await OrderItem.create(
+//         {
+//           OrderId: order.id,
+//           ProductId: product.Product.id,
+//           quantity: product.quantity,
+//         },
+//         { transaction: t }
+//       );
+//     }
+
+//     // Remove all cart entries associated with the current user
+//     await Cart.destroy({ where: { UserId: req.user.id } }, { transaction: t });
+
+//     await t.commit(); // Commit the transaction
+
+//     res.json({ clientSecret: paymentIntent.client_secret });
+//   } catch (error) {
+//     await t.rollback(); // Rollback the transaction in case of error
+//     console.error("Error creating payment intent:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// };
 export const createPaymentByStripe = async (req, res) => {
-  const t = await sequelize.transaction(); // Use a transaction to ensure atomic operations
+  const t = await sequelize.transaction();
   try {
     const { productCart, amount } = req.body;
-    const currency = "usd"; // Adjust currency as needed
-    // Validate amount and productCart
+    const currency = "usd";
+
     if (
       !amount ||
       !productCart ||
@@ -26,15 +103,15 @@ export const createPaymentByStripe = async (req, res) => {
       return res.status(400).json({ error: "Invalid input data" });
     }
 
-    // Verify that all product IDs exist
     const productIds = productCart.map((product) => product.Product.id);
     const products = await Product.findAll({ where: { id: productIds } });
     if (products.length !== productCart.length) {
       return res.status(400).json({ error: "Some products do not exist" });
     }
 
+    const amountInCents = amount;
     const paymentIntent = await stripeInstance.paymentIntents.create({
-      amount,
+      amount: amountInCents,
       currency,
       automatic_payment_methods: { enabled: true },
     });
@@ -42,11 +119,12 @@ export const createPaymentByStripe = async (req, res) => {
     if (!paymentIntent) {
       throw new Error("Failed to create payment intent");
     }
+
     const addressId = await Address.findOne({ where: { UserId: req.user.id } });
     if (!addressId) {
       return res.status(400).json({ error: "You not yet insert Location" });
     }
-    // Create the order
+
     const order = await Order.create(
       {
         email: req.user.email,
@@ -54,7 +132,7 @@ export const createPaymentByStripe = async (req, res) => {
         UserId: req.user.id,
         AddressId: addressId.id,
         phone: req.user.phone,
-        amount: amount,
+        amount: amountInCents / 100,
       },
       { transaction: t }
     );
@@ -63,9 +141,7 @@ export const createPaymentByStripe = async (req, res) => {
       throw new Error("Failed to create order");
     }
 
-    // Create order items
     for (const product of productCart) {
-      console.log(product);
       await OrderItem.create(
         {
           OrderId: order.id,
@@ -76,14 +152,13 @@ export const createPaymentByStripe = async (req, res) => {
       );
     }
 
-    // Remove all cart entries associated with the current user
     await Cart.destroy({ where: { UserId: req.user.id } }, { transaction: t });
 
-    await t.commit(); // Commit the transaction
+    await t.commit();
 
     res.json({ clientSecret: paymentIntent.client_secret });
   } catch (error) {
-    await t.rollback(); // Rollback the transaction in case of error
+    await t.rollback();
     console.error("Error creating payment intent:", error);
     res.status(500).json({ error: "Internal server error" });
   }
@@ -120,7 +195,81 @@ export const userOrders = async (req, res) => {
   }
 };
 
-// Fetch order details by order ID
+// ! payment by Cash
+export const createPaymentByCash = async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const { productCart, amount } = req.body;
+
+    // Validate amount and productCart
+    if (
+      !amount ||
+      !productCart ||
+      !Array.isArray(productCart) ||
+      productCart.length === 0
+    ) {
+      return res.status(400).json({ error: "Invalid input data" });
+    }
+
+    // Verify that all product IDs exist
+    const productIds = productCart.map((product) => product.Product.id);
+    const products = await Product.findAll({ where: { id: productIds } });
+    if (products.length !== productCart.length) {
+      return res.status(400).json({ error: "Some products do not exist" });
+    }
+
+    const address = await Address.findOne({ where: { UserId: req.user.id } });
+    if (!address) {
+      return res
+        .status(400)
+        .json({ error: "You have not yet inserted Location" });
+    }
+
+    // Create the order
+    const order = await Order.create(
+      {
+        email: req.user.email,
+        payment: "Cash",
+        UserId: req.user.id,
+        AddressId: address.id,
+        phone: req.user.phone,
+        amount: amount,
+      },
+      { transaction: t }
+    );
+
+    if (!order) {
+      throw new Error("Failed to create order");
+    }
+
+    // Create order items
+    for (const product of productCart) {
+      await OrderItem.create(
+        {
+          OrderId: order.id,
+          ProductId: product.Product.id,
+          quantity: product.quantity,
+        },
+        { transaction: t }
+      );
+    }
+
+    // Remove all cart entries associated with the current user
+    await Cart.destroy({ where: { UserId: req.user.id } }, { transaction: t });
+
+    await t.commit(); // Commit the transaction
+
+    res.status(201).json({ message: "Order confirmed successfully." });
+  } catch (error) {
+    await t.rollback(); // Rollback the transaction in case of error
+    console.error("Error confirming order:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while confirming the order." });
+  }
+};
+
+//! Fetch order details by order ID
 export const getOrderDetail = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -138,6 +287,9 @@ export const getOrderDetail = async (req, res) => {
           model: OrderItem,
           include: [Product],
         },
+        {
+          model: Address,
+        },
       ],
     });
 
@@ -153,6 +305,7 @@ export const getOrderDetail = async (req, res) => {
 };
 
 // Fetch all orders for admin users
+// Assuming you have an Address model related to the Order model
 export const getAllorder = async (req, res) => {
   try {
     const orders = await Order.findAll({
@@ -160,6 +313,9 @@ export const getAllorder = async (req, res) => {
         {
           model: OrderItem,
           include: [Product],
+        },
+        {
+          model: Address, // Add this line to include the Address model
         },
       ],
       order: [["createdAt", "DESC"]],
@@ -175,6 +331,7 @@ export const getAllorder = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
 //! All address
 export const allAddress = async (req, res) => {
   const userId = req.user.id;

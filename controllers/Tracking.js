@@ -51,12 +51,8 @@ export const updateTrackingDetail = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    console.log(status);
-
     // Find tracking detail by primary key
-    const trackingDetail = await TrackingDetail.findOne({
-      where: { OrderId: id },
-    });
+    const trackingDetail = await TrackingDetail.findByPk(id);
 
     if (!trackingDetail) {
       return res.status(404).json({ error: "Tracking detail not found" });

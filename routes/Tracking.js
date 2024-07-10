@@ -12,7 +12,7 @@ const router = express.Router();
 router.post("/", checkRole(["admin"]), createTrackingDetail);
 router.get("/", getAllTrackingDetails);
 router.get("/:id", getTrackingDetailById);
-router.put("/updateStatus/:id", checkRole(["admin"]), updateTrackingDetail);
+router.put("/:id", checkRole(["admin"]), updateTrackingDetail);
 router.delete("/:id", checkRole(["admin"]), deleteTrackingDetail);
 
 export default router;

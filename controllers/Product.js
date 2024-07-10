@@ -133,6 +133,36 @@ const product = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+//! search product
+
+const searchProducts = async (req, res) => {
+  const { query } = req.query;
+  console.log(`Received query: ${query}`); // Log the received query
+
+  if (!query) {
+    return res.status(400).json({ error: "Query parameter is required" });
+  }
+
+  try {
+    const products = await Product.findAll({
+      where: {
+        title: {
+          [Op.like]: `%${query}%`,
+        },
+      },
+    });
+    console.log(`Found products: ${products.length}`);
+
+    if (products.length === 0) {
+      return res.status(404).json({ message: "No products found" });
+    }
+
+    res.json({ products });
+  } catch (error) {
+    console.error(error); // Log any errors
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 export {
   getAllProduct,
@@ -141,4 +171,5 @@ export {
   deleteProduct,
   productDetail,
   product,
+  searchProducts,
 };
